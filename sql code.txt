@@ -1,0 +1,69 @@
+
+CREATE TABLE objective(
+ObjectiveID INT PRIMARY KEY,
+Title VARCHAR(300) NOT NULL,
+Description VARCHAR(500),
+StartDate Date,
+EndDate Date,
+Status VARCHAR(100),
+TeamID INT NOT NULL,
+OwnerEmployeeID INT
+FOREIGN KEY (TeamID) REFERENCES team(TeamID),
+FOREIGN KEY (OwnerEmployeeID) REFERENCES employee(EmployeeID)
+);
+
+CREATE TABLE team (
+    TeamID INT PRIMARY KEY,
+    TeamName VARCHAR(100) NOT NULL
+); 
+
+CREATE TABLE employee (
+    EmployeeID INT PRIMARY KEY,
+    FirstName VARCHAR(100) NOT NULL,
+    LastName VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    Role VARCHAR(100),
+    HireDate DATE,
+    TeamID INT,
+    FOREIGN KEY (TeamID) REFERENCES team(TeamID)
+   
+);
+
+
+CREATE TABLE employee_key_result (
+    EmployeeID INT,
+    KeyResultID INT,
+    AssignedDate DATE,
+    Weight FLOAT,
+    Status VARCHAR(100),
+    PRIMARY KEY (EmployeeID, KeyResultID),
+    FOREIGN KEY (EmployeeID) REFERENCES employee(EmployeeID),
+    FOREIGN KEY (KeyResultID) REFERENCES key_result(KeyResultID)
+); 
+
+CREATE TABLE key_result(
+KeyResultID int PRIMARY KEY,
+ObjectiveID int NOT NULL,
+Title VARCHAR(100) NOT NULL,
+MetricName VARCHAR(100),
+StartValue Float,
+CurrentValue Float,
+TargetValue Float NOT NULL,
+MaxValue Float,
+Unit VARCHAR(100),
+StartDate Date,
+DueDate Date,
+Status VARCHAR(100)
+FOREIGN KEY (ObjectiveID) REFERENCES objective(ObjectiveID)
+);
+
+
+INSERT INTO team (TeamID, TeamName) VALUES (11011, 'Team Magenta');
+INSERT INTO employee (EmployeeID, FirstName, LastName, Email, Role, HireDate, TeamID) VALUES (1, 'Nate', ‘Bartlett’, 'bartlettn2@spu.edu', 'Manager', '2024-01-10', 11011);
+
+SELECT * FROM team;
+SELECT * FROM employee;
+
+UPDATE employee SET Role = “CEO” WHERE EmployeeID = 1;
+
+DELETE FROM team WHERE TeamID = 11011

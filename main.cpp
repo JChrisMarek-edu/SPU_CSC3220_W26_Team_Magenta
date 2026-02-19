@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ctime>
 #include <string>
+
 using namespace std;
 
 struct teams {
@@ -42,13 +43,14 @@ int main(){
     while (!(input == "q" || input == "quit")){
         cin>>input;
         for (int i = 0; i < input.size(); i++){ //convert entire string to lowercase
-            input.at(i) = std::tolower(input.at(i)); //i know there's a better way to do it, i'm too tired to figure it out
+           input.at(i) = std::tolower(input.at(i)); //i know there's a better way to do it, i'm too tired to figure it out
             // it should also probably trim leading and ending whitespace, we can do that later though
         }
-
+        cout<<input<<endl;
 
         if (input == "help" || input == "/help"){
             //help command
+            cout<<"consider yourself helped."<<endl;
         }
 
         else if(input == "create" || input == "new"){
