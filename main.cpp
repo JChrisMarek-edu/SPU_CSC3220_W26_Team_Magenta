@@ -1,7 +1,7 @@
 #include <iostream>
 #include <ctime>
 #include <string>
-
+#include <sqlite3.h>
 using namespace std;
 
 struct teams {
@@ -36,6 +36,17 @@ struct date{
 };
 
 int main(){
+
+sqlite3* db;
+
+int rc = sqlite3_open("okr.db", &db);
+
+if (rc) {
+    cout << "Can't open database: "<< sqlite3_errmsg(db)<<endl;
+    return 1;
+}
+    cout << "Database opened successfully!"<<endl;
+
 
     cout<<"Welcome to OK Results."<<endl;
     string input = "";
