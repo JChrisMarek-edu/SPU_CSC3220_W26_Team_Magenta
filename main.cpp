@@ -6,45 +6,17 @@
 using namespace std;
 
 //    g++ main.cpp -lsqlite3 -o program
-//just leave this here
+//just leave this here, so i can copy-paste compile quickly
 
-struct teams { //i'm pretty sure we don't need these structs if we're using sqlite
-    int teamID;
-    string teamName;
-};
-
-struct employee {
-    int employeeID;
-    string fName;
-    string lName;
-    string email;
-    string role;
-    string hireDate; //change to date object
-    int teamID;
-};
-
-struct objective {
-    int objectiveID;
-    string title;
-    string description;
-    string startDate;
-    string endDate;
-    string status;
-    int teamID;
-    int ownerEmployeeID;
-};
-struct date{
-    int month;
-    int day;
-    int year;
-};
 
 string getInput(){
     string input = "";
     cin>>input;
         for (int i = 0; i < input.size(); i++){ //convert string to lowercase
            input.at(i) = tolower(input.at(i)); 
-            
+            if (input.at(i) == ' '){
+                input.at(i) = '_';
+            }
         }
         return input;
 }
@@ -84,15 +56,16 @@ if (rc) {
             //create employee table
     const char* createEmployeeTable =
             "CREATE TABLE IF NOT EXISTS employee ("
-            "EmployeeID INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "FirstName TEXT NOT NULL,"
-            "LastName TEXT NOT NULL,"
-            "EMAIL TEXT UNIQUE NOT NULL,"
-            "Role TEXT,"
-            "HireDate TEXT,"
-            "TeamID INTEGER,"
-            "FOREIGN KEY (TeamID) REFERENCES team(TeamID)"
-            ");";
+            "EmployeeID INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "FirstName TEXT NOT NULL,"
+            "LastName TEXT NOT NULL,"
+            "EMAIL TEXT UNIQUE NOT NULL,"
+            "Role TEXT,"
+            "HireDate TEXT,"
+            "TeamID INTEGER,"
+            "FOREIGN KEY (TeamID) REFERENCES team(TeamID)"
+            ");"
+
 
             sqlite3_exec(db, createEmployeeTable, nullptr, nullptr, nullptr);
             
@@ -134,7 +107,18 @@ if (rc) {
             sqlite3_exec(db, createKeyResultsTable, nullptr, nullptr, nullptr);
 
 
+            const char* createEmployeeKeyResultsTable =
+            "CREATE TABLE IF NOT EXISTS employee_key_result ("
+            "EmployeeID INTEGER PRIMARY KEY,"
+            "KeyResultID INTEGER NOT NULL,"
+            "AssignedDate TEXT NOT NULL,"
+            "Weight REAL,"
+            "Status TEXT,"
+            "FOREIGN KEY (EmployeeID) REFERENCES employee(EmployeeID),"
+            "FOREIGN KEY (KeyResultID) REFERENCES key_result(KeyResultID)"
+            ");"
 
+            sqlite3_exec(db, createEmployeeKeyResultsTable, nullptr, nullptr, nullptr);
 
 
 
@@ -161,10 +145,10 @@ if (rc) {
 
         else if(input == "create" || input == "new"){
             cout<<"What type of object would you like to create?"<<endl;
-            cout<<"OKR Object types are: Team, Employee, Key Result, and Objective"<<endl;
+            cout<<"OKR Object types are: team, employee, key result, employee key result, and objective"<<endl;
             input = getInput();
-            
-            if (input == "employee"){//mods, doxx this guy
+            string sql = "";
+            if (input == "employee"){
                 cout<<"For all fields, don't include any spaces in your input."<<endl; //it causes a silly bug i dont know how to fix we can ignore for now
 
                 string firstName = "";
@@ -204,12 +188,40 @@ if (rc) {
             cin.ignore();
             getline(cin, teamName);
 
+            sql = "INSERT INTO team (TeamName) VALUES ('" + teamName + "');";
+        
 
-            
-            string sql = "INSERT INTO team (TeamName) VALUES ('" + teamName + "');";
-            
+            }else if (input == "objective" || input == "objectives"){
+                string title;
+                cout<<"Please provide a title:"<<endl;
+                cin>>title;
+
+                string desc;
+                cout<<"Please provide a description:"<<endl;
+                cin>>desc;
+
+                string startDate;
+                cout<<"Please provide the start date:"<<endl;
+                cin>>startDate;
+
+                string endDate;
+                cout<<"Please provide the end date:"<<endl;
+                cin>>endDate;
+
+                string status;
+                cout<<"what is the current status of the objective?"<<endl;
+                cin>>status;
+
+                sql = "INSERT INTO objectives (Title, Description, StartDate, EndDate, Status) VALUES ('" + title + ", "+ desc + ", "+ startDate +", " + endDate + "');";
 
 
+            }else if (input == "key_result"){
+                //create objective
+            }else if (input == "employee_key_result"){
+                //create ekr
+            }else{
+                cout<<"inproper object type."<<endl;
+            }
 
             char* errMsg = nullptr;
 
@@ -219,22 +231,6 @@ if (rc) {
                 cout << "SQL error: " << errMsg << endl;
                 sqlite3_free(errMsg);
             }
-
-
-
-
-
-
-
-            }else if (input == "objective"){
-                //create objective
-            }else if (input == "key result"){
-                //create objective
-            }else{
-                cout<<"inproper object type."<<endl;
-            }
-
-
         }
         else if (input == "delete" || input == "kill") {
 
@@ -277,7 +273,11 @@ if (rc) {
 
         }else if (input == "update" || input == "edit") {
             //add this
+        
+        }else if (input == "join" || input == "combine") {
+            //add this
 
+        }
         }else{
             cout<<"Unidentified input. type help for a list of commands."<<endl;
         }
