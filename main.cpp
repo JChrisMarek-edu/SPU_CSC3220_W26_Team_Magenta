@@ -56,15 +56,15 @@ if (rc) {
             //create employee table
     const char* createEmployeeTable =
             "CREATE TABLE IF NOT EXISTS employee ("
-            "EmployeeID INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "FirstName TEXT NOT NULL,"
-            "LastName TEXT NOT NULL,"
-            "EMAIL TEXT UNIQUE NOT NULL,"
-            "Role TEXT,"
-            "HireDate TEXT,"
-            "TeamID INTEGER,"
-            "FOREIGN KEY (TeamID) REFERENCES team(TeamID)"
-            ");"
+            "EmployeeID INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "FirstName TEXT NOT NULL,"
+            "LastName TEXT NOT NULL,"
+            "EMAIL TEXT UNIQUE NOT NULL,"
+            "Role TEXT,"
+            "HireDate TEXT,"
+            "TeamID INTEGER,"
+            "FOREIGN KEY (TeamID) REFERENCES team(TeamID)"
+            ");";
 
 
             sqlite3_exec(db, createEmployeeTable, nullptr, nullptr, nullptr);
@@ -109,14 +109,14 @@ if (rc) {
 
             const char* createEmployeeKeyResultsTable =
             "CREATE TABLE IF NOT EXISTS employee_key_result ("
-            "EmployeeID INTEGER PRIMARY KEY,"
-            "KeyResultID INTEGER NOT NULL,"
-            "AssignedDate TEXT NOT NULL,"
-            "Weight REAL,"
-            "Status TEXT,"
-            "FOREIGN KEY (EmployeeID) REFERENCES employee(EmployeeID),"
-            "FOREIGN KEY (KeyResultID) REFERENCES key_result(KeyResultID)"
-            ");"
+            "EmployeeID INTEGER PRIMARY KEY,"
+            "KeyResultID INTEGER NOT NULL,"
+            "AssignedDate TEXT NOT NULL,"
+            "Weight REAL,"
+            "Status TEXT,"
+            "FOREIGN KEY (EmployeeID) REFERENCES employee(EmployeeID),"
+            "FOREIGN KEY (KeyResultID) REFERENCES key_result(KeyResultID)"
+            ");";
 
             sqlite3_exec(db, createEmployeeKeyResultsTable, nullptr, nullptr, nullptr);
 
@@ -277,7 +277,6 @@ if (rc) {
         }else if (input == "join" || input == "combine") {
             //add this
 
-        }
         }else{
             cout<<"Unidentified input. type help for a list of commands."<<endl;
         }
