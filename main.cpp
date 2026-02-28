@@ -2,6 +2,8 @@
 #include <string>
 #include <sqlite3.h> //make sure you install sqlite through linux/ubuntu or something else
 //or this will not work. also, if any of the code doesn't work for you, let nate know.
+//ignore the squiggly red line, it's harmless. just compile using ubuntu.
+//IMPORTANT! use ./program to run! using ./main.cpp will have issues.
 using namespace std;
 
 //    g++ main.cpp -lsqlite3 -o program
@@ -10,15 +12,41 @@ using namespace std;
 
 string getInput(){
     string input = "";
-    getline(cin, input);
-        for (int i = 0; i < input.size(); i++){ //convert string to lowercase
-           input.at(i) = tolower(input.at(i)); 
-            if (input.at(i) == ' '){
-                input.at(i) = '_';
+    while (input == ""){
+        getline(cin, input);
+            for (int i = 0; i < input.size(); i++){ //convert string to lowercase
+                input.at(i) = tolower(input.at(i)); 
+                if (input.at(i) == ' '){
+                    input.at(i) = '_';
+                }
+            }
+            if (input == ""){
+                cout<<"Empty input recieved. Please re-enter input: "<<endl;
             }
         }
         return input;
 }
+
+int getIntInput(){ //maybe make a version of this for floats?
+    string input = "";
+    string output = "";
+    
+    while (output == ""){
+    getline(cin, input);
+        for (int i = 0; i < input.size(); i++){
+            if (isdigit(input.at(i))){ //only get numbers from input
+                output += input.at(i);
+            }
+        }
+        if (output == ""){
+            cout<<"input could not be understood. please enter a positive integer. ";
+            
+        }
+    }
+        return stoi(output);
+}
+
+
 
 static int callback(void* unused, int argc, char** argv, char** azColName) { //Chatgpt made this method
     for (int i = 0; i < argc; i++) {
@@ -33,6 +61,9 @@ static int callback(void* unused, int argc, char** argv, char** azColName) { //C
 int main(){
 
 sqlite3* db;
+char* errMsg = nullptr;
+int rc = -1;
+int trolling = 0;
 
 if (sqlite3_open("okr.db", &db) != SQLITE_OK) {
     std::cerr << "Cannot open database\n";
@@ -50,9 +81,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             "TeamName TEXT NOT NULL"
             ");";
 
-            char* errMsg = nullptr;
+            errMsg = nullptr;
 
-            int rc = sqlite3_exec(db, createTeamTable, nullptr, nullptr, &errMsg);
+            rc = sqlite3_exec(db, createTeamTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
                 cout << "SQL error: " << errMsg << endl;
@@ -74,9 +105,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             ");";
 
 
-            char* errMsg = nullptr;
+            errMsg = nullptr;
 
-            int rc = sqlite3_exec(db, createEmployeeTable, nullptr, nullptr, &errMsg);
+            rc = sqlite3_exec(db, createEmployeeTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
                 cout << "SQL error: " << errMsg << endl;
@@ -98,9 +129,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             "FOREIGN KEY (OwnerEmployeeID) REFERENCES employee(EmployeeID)"
             ");";
 
-            char* errMsg = nullptr;
+            errMsg = nullptr;
 
-            int rc = sqlite3_exec(db, createObjectivesTable, nullptr, nullptr, &errMsg);
+            rc = sqlite3_exec(db, createObjectivesTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
                 cout << "SQL error: " << errMsg << endl;
@@ -125,9 +156,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             "FOREIGN KEY (ObjectiveID) REFERENCES objectives(ObjectiveID)"
             ");";
 
-            char* errMsg = nullptr;
+            errMsg = nullptr;
 
-            int rc = sqlite3_exec(db, createKeyResultsTable, nullptr, nullptr, &errMsg);
+            rc = sqlite3_exec(db, createKeyResultsTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
                 cout << "SQL error: " << errMsg << endl;
@@ -147,9 +178,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             "FOREIGN KEY (KeyResultID) REFERENCES key_results(KeyResultID)"
             ");";
 
-            char* errMsg = nullptr;
+            errMsg = nullptr;
 
-            int rc = sqlite3_exec(db, createEmployeeKeyResultsTable, nullptr, nullptr, &errMsg);
+            rc = sqlite3_exec(db, createEmployeeKeyResultsTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
                 cout << "SQL error: " << errMsg << endl;
@@ -168,15 +199,15 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
         //debug code
         //cout<<input<<endl;
 
-        if (input == "help" || input == "/help"){
+        if (input == "help" || input == "help"){
             //help command
             cout<<"Commands:"<<endl;
             cout<<"---------------------------"<<endl;
-            cout<<"Create: Add a new team, employee, Objective, or Key Result"<<endl;
+            cout<<"Create: Add a new team, employee, Objective, Key Result, or employee key result."<<endl;
             cout<<"Delete: remove some or all data from a database table of your choice"<<endl;
             cout<<"List: Read all data from a database table of your choice"<<endl;
-            cout<<"Help: Opens this menu"<<endl;
-            cout<<"Update: not implemented yet"<<endl;
+            cout<<"Help: Opens help menu"<<endl;
+            cout<<"Update: "<<endl;
             cout<<""<<endl;
             cout<<""<<endl;
         }
@@ -184,148 +215,198 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
 //Add to table
         else if(input == "create" || input == "new"){ 
             cout<<"What type of object would you like to create?"<<endl; 
-            cout<<"OKR Object types are: team, employee, key result, employee key result, and objective"<<endl; 
+            cout<<"OKR Table types are: team, employee, key result, employee key result, and objective"<<endl; 
             input = getInput(); 
             string sql; 
             
+
+            //note: all of these don't execute the code immediately, they store the code in the sql variable and execute at the end.
             if (input == "employee"){ 
-                cout<<"For all fields, don't include any spaces in your input."<<endl;
-                string firstName = ""; 
-                string lastName = ""; 
-                string email = ""; 
-                string role = ""; 
-                int teamID = -1; 
-                cout << "First Name: "; 
-                cin >> firstName; cout << "Last Name: "; 
-                cin >> lastName; cout << "Email: "; 
-                cin >> email; cout << "Role: "; 
-                cin >> role; cout << "Team ID: "; 
-                cin >> teamID; 
-                sql = "INSERT INTO employee " "(FirstName, LastName, Email, Role, TeamID) VALUES (' " + 
-                firstName + "', '" + lastName + "', '" + email + "', '" + role + "', " + to_string(teamID) + ");"; 
                 
+                string firstName; 
+                string lastName; 
+                string email; 
+                string role; 
+                string hireDate;
+                int teamID; 
+
+
+                cout << "First Name: "<<endl; firstName = getInput(); 
+                cout << "Last Name: "<<endl; lastName = getInput(); 
+                cout << "Email: "<<endl; email = getInput(); 
+                cout << "Role: "<<endl; role = getInput(); 
+                cout << "Employee Hire Date: "<<endl; hireDate = getInput(); 
+                cout << "Team ID: "<<endl; teamID = getIntInput(); 
+
+                sql = "INSERT INTO employee (FirstName, LastName, Email, Role, HireDate, TeamID) "
+                "VALUES ('" + firstName + "', '" + lastName + "', '" + email + "', '" + role + "', '" + hireDate + "', " + to_string(teamID) + ");"; 
+                
+                //debug code
+                //  cout<<"sql command: " + sql<<endl;
                 
                 
 
             
             }else if (input == "team"){ 
                 string teamName = ""; 
-                cout << "Enter Team Name: "; 
-                getline(cin, teamName); 
-                sql = "INSERT INTO team (TeamName) VALUES ('" + teamName + "');";
+                int teamID; 
 
+                cout << "Team Name: "<<endl; teamName = getInput();
+                cout << "Team ID: "<<endl; teamID = getIntInput();
+
+                sql = "INSERT INTO team (TeamName, TeamID) VALUES ('" + teamName + "', " + to_string(teamID) + ");";
+                
             }else if (input == "objective" || input == "objectives") {
 
             string title;
-            cout << "Title: ";
-            cin >> title;
-
             string desc;
-            cout << "Description: ";
-            cin >> desc;
-
             string startDate;
-            cout << "Start Date: ";
-            cin >> startDate;
-
             string endDate;
-            cout << "End Date: ";
-            cin >> endDate;
-
             string status;
-            cout << "Status: ";
-            cin >> status;
-
             int teamID;
-            cout << "Team ID: ";
-            cin >> teamID;
-
             int ownerID;
-            cout << "Owner Employee ID (or 0 if none): ";
-            cin >> ownerID;
+
+            cout << "Title: "<<endl; title = getInput();
+            cout << "Description: "<<endl; desc = getInput();
+            cout << "Start Date: "<<endl; startDate = getInput();
+            cout << "End Date: "<<endl; endDate = getInput();
+            cout << "Status: "<<endl; status = getInput();
+            cout << "Team ID: "<<endl; teamID = getIntInput();
+            cout << "Owner Employee ID (or 0 if none): "<<endl; ownerID = getIntInput();
 
             sql = "INSERT INTO objectives "
                 "(Title, Description, StartDate, EndDate, Status, TeamID, OwnerEmployeeID) "
                 "VALUES ('" + title + "', '" + desc + "', '" + startDate + "', '" +
                 endDate + "', '" + status + "', " +
                 to_string(teamID) + ", " + (ownerID == 0 ? "NULL" : to_string(ownerID)) + ");";
-
-}else if (input == "team"){
-        
-            string teamName = "";
-            cout << "Enter Team Name: ";
-            cin.ignore();
-            getline(cin, teamName);
-
-            sql = "INSERT INTO team (TeamName) VALUES ('" + teamName + "');";
         
 
-            }else if (input == "objective" || input == "objectives"){
+            }else if (input == "key_result" || input == "key_results" || input == "kr"){
+                int keyResultID;
+                int objectiveID;
                 string title;
-                cout<<"Please provide a title:"<<endl;
-                cin>>title;
-
-                string desc;
-                cout<<"Please provide a description:"<<endl;
-                cin>>desc;
-
+                string metricName;
+                float startVal;
+                float currVal;
+                float targetVal;
+                float maxVal;
+                string unit;
                 string startDate;
-                cout<<"Please provide the start date:"<<endl;
-                cin>>startDate;
-
-                string endDate;
-                cout<<"Please provide the end date:"<<endl;
-                cin>>endDate;
-
+                string dueDate;
                 string status;
-                cout<<"what is the current status of the objective?"<<endl;
-                cin>>status;
+                
 
-                sql = "INSERT INTO objectives (Title, Description, StartDate, EndDate, Status) VALUES ('" + title + "', '"+ desc + "', '"+ startDate +"', '" 
-                + endDate + "', '"+ status + "');";
+            cout << "Key result ID: "<<endl; keyResultID = getIntInput();
+            cout << "Targeted Objective ID: "<<endl; objectiveID = getIntInput();
+            cout << "Title: "<<endl; title = getInput();
+            cout << "Metric Name: "<<endl; metricName = getInput();
+        cout << "---------------------------------------------------"<<endl;
+            cout << "Completion Starting Value: "<<endl; startVal = getIntInput();
+            cout << "Completion Current Value: "<<endl; currVal = getIntInput();
+            cout << "Completion Target Value: "<<endl; targetVal = getIntInput();
+            cout << "Completion Max Value: "<<endl; maxVal = getIntInput();
+        cout << "---------------------------------------------------"<<endl;
+            cout << "Unit: "<<endl; unit = getInput();
+            cout << "Start Date: "<<endl; startDate = getInput();
+            cout << "Due date: "<<endl; dueDate = getInput();
+            cout << "Current Status: "<<endl; status = getInput();
 
 
-            }else if (input == "key_result"){
-                //create objective
-            }else if (input == "employee_key_result"){
-                //create ekr
+            sql = "INSERT INTO key_results "
+                "(KeyResultID, ObjectiveID, Title, MetricName, StartValue, CurrentValue, TargetValue, MaxValue, Unit, StartDate, DueDate, Status) "
+                "VALUES (" + to_string(keyResultID) + ", " + to_string(objectiveID) + ", '" + title + "', '" + metricName + "', " 
+                + to_string(startVal) + ", " + to_string(currVal) + ", " + to_string(targetVal) + ", " + to_string(maxVal) + ", '"
+                + unit + "', '" + startDate + "', '" + dueDate + "', '" + status + "');";
+
+
+            }else if (input == "employee_key_result" || input == "employee_key_results" || input == "ekr"){
+                int employeeID;
+                int keyResultID;
+                string assDate;
+                float weight;
+                string status;
+
+
+                cout << "Employee ID: "<<endl; employeeID = getIntInput();
+                cout << "Key result ID: "<<endl; keyResultID = getIntInput();
+                cout << "Assigned Date: "<<endl; assDate = getInput();
+                cout << "Weight: "<<endl; weight = getIntInput();
+                cout << "Status: "<<endl; status = getInput();
+       
+                sql = "INSERT INTO employee_key_result "
+                "(EmployeeID, KeyResultID, AssignedDate, Weight, Status) "
+                "VALUES (" + to_string(employeeID) + ", " + to_string(keyResultID) + ", '" + assDate + "', '" + to_string(weight) + "', '" 
+                + status + "');";
+
             }else{
                 cout<<"inproper object type."<<endl;
+                sql = "";
             }
 
-            char* errMsg = nullptr;
+
+            //execute sql code
+            errMsg = nullptr;
 
             sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
 
             if (errMsg) {
                 cout << "SQL error: " << errMsg << endl;
                 sqlite3_free(errMsg);
+            }else{
+                cout<<"Successfully created table entry of type: " + input <<endl;
             }
             sql.clear();
         }
+
+        //Delete data from table
+
         else if (input == "delete" || input == "kill") {
 
-            cout << "Delete which object? choose from team, employee, objective, or key_result" << endl;
+            cout << "Delete which object?" << endl << "choose from team, employee, objective, or key result" << endl;
+            string sql;
              input = getInput();
-
+             int id = -1;
+//add multiple terms the user can type
             if (input == "team") {
                 cout << "Enter Team ID: ";
-                int id;
-                cin >> id;
-
-                string sql =
-                    "DELETE FROM team WHERE TeamID = " + to_string(id) + ";";
-
-                sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
-
+                id = getIntInput();
+                sql = "DELETE FROM team WHERE TeamID = " + to_string(id) + ";";
                 cout << "Team deleted." << endl;
+
             }else if  (input == "employee"){
-                //FIXME implement employee deleting
+                cout << "Enter Employee ID: ";
+                id = getIntInput();
+                sql = "DELETE FROM employee WHERE EmployeeID = " + to_string(id) + ";";
+                cout << "Employee deleted." << endl;
+
             }else if  (input == "key_result"){
-                //FIXME implement key result deleting
+                cout << "Enter key result ID: ";
+                id = getIntInput();
+                sql = "DELETE FROM key_results WHERE KeyResultID = " + to_string(id) + ";";
+                cout << "Key Result deleted." << endl;
+
             }else if  (input == "objective"){
-                //FIXME implement objective deleting
+                cout << "Enter Objective ID: ";
+                id = getIntInput();
+                sql = "DELETE FROM objectives WHERE ObjectiveID = " + to_string(id) + ";";
+                cout << "Objective deleted." << endl;
+
+            else if  (input == "employee_key_result"){//unfinished
+                cout<<"Employee key results can't currently be deleted. We will work on it though!"
             }
+            
+            errMsg = nullptr;
+
+            sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+
+            if (errMsg) {
+                cout << "SQL error: " << errMsg << endl;
+                sqlite3_free(errMsg);
+            }else{
+                cout<<"Successfully deleted entry of type: " + input <<endl;
+            }
+            sql.clear();
+            
 
         }else if (input == "list" || input == "view") { //view data
 
@@ -353,6 +434,11 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             break;
         }else{
             cout<<"Unidentified input. type help for a list of commands."<<endl;
+            trolling++;
+            if (trolling >= 15){
+                cout<<"An error has likely occured, or you have entered an incorrect input too many times. The program will now quit" <<endl;
+                break;
+            }
         }
 
         
