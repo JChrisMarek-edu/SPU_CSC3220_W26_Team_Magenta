@@ -1,5 +1,4 @@
 #include <iostream>
-#include <ctime>
 #include <string>
 #include <sqlite3.h> //make sure you install sqlite through linux/ubuntu or something else
 //or this will not work. also, if any of the code doesn't work for you, let nate know.
@@ -11,7 +10,7 @@ using namespace std;
 
 string getInput(){
     string input = "";
-    cin>>input;
+    getline(cin, input);
         for (int i = 0; i < input.size(); i++){ //convert string to lowercase
            input.at(i) = tolower(input.at(i)); 
             if (input.at(i) == ' '){
@@ -35,12 +34,12 @@ int main(){
 
 sqlite3* db;
 
-int rc = sqlite3_open("okr.db", &db);
-
-if (rc) {
-    cout << "Can't open database: "<< sqlite3_errmsg(db)<<endl;
+if (sqlite3_open("okr.db", &db) != SQLITE_OK) {
+    std::cerr << "Cannot open database\n";
     return 1;
 }
+
+sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
     cout << "Database opened successfully!"<<endl;
 
     sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
@@ -51,7 +50,15 @@ if (rc) {
             "TeamName TEXT NOT NULL"
             ");";
 
-            sqlite3_exec(db, createTeamTable, nullptr, nullptr, nullptr);
+            char* errMsg = nullptr;
+
+            int rc = sqlite3_exec(db, createTeamTable, nullptr, nullptr, &errMsg);
+
+            if (rc != SQLITE_OK) {
+                cout << "SQL error: " << errMsg << endl;
+                sqlite3_free(errMsg);
+            } 
+            
     
             //create employee table
     const char* createEmployeeTable =
@@ -59,7 +66,7 @@ if (rc) {
             "EmployeeID INTEGER PRIMARY KEY AUTOINCREMENT,"
             "FirstName TEXT NOT NULL,"
             "LastName TEXT NOT NULL,"
-            "EMAIL TEXT UNIQUE NOT NULL,"
+            "Email TEXT UNIQUE NOT NULL,"
             "Role TEXT,"
             "HireDate TEXT,"
             "TeamID INTEGER,"
@@ -67,7 +74,14 @@ if (rc) {
             ");";
 
 
-            sqlite3_exec(db, createEmployeeTable, nullptr, nullptr, nullptr);
+            char* errMsg = nullptr;
+
+            int rc = sqlite3_exec(db, createEmployeeTable, nullptr, nullptr, &errMsg);
+
+            if (rc != SQLITE_OK) {
+                cout << "SQL error: " << errMsg << endl;
+                sqlite3_free(errMsg);
+            } 
             
             //create Objectives Table
             const char* createObjectivesTable =
@@ -84,7 +98,14 @@ if (rc) {
             "FOREIGN KEY (OwnerEmployeeID) REFERENCES employee(EmployeeID)"
             ");";
 
-            sqlite3_exec(db, createObjectivesTable, nullptr, nullptr, nullptr);
+            char* errMsg = nullptr;
+
+            int rc = sqlite3_exec(db, createObjectivesTable, nullptr, nullptr, &errMsg);
+
+            if (rc != SQLITE_OK) {
+                cout << "SQL error: " << errMsg << endl;
+                sqlite3_free(errMsg);
+            } 
             
             //Create Key Results Table
             const char* createKeyResultsTable =
@@ -104,26 +125,43 @@ if (rc) {
             "FOREIGN KEY (ObjectiveID) REFERENCES objectives(ObjectiveID)"
             ");";
 
-            sqlite3_exec(db, createKeyResultsTable, nullptr, nullptr, nullptr);
+            char* errMsg = nullptr;
+
+            int rc = sqlite3_exec(db, createKeyResultsTable, nullptr, nullptr, &errMsg);
+
+            if (rc != SQLITE_OK) {
+                cout << "SQL error: " << errMsg << endl;
+                sqlite3_free(errMsg);
+            } 
 
 
             const char* createEmployeeKeyResultsTable =
-            "CREATE TABLE IF NOT EXISTS employee_key_result ("
-            "EmployeeID INTEGER PRIMARY KEY,"
+            "CREATE TABLE IF NOT EXISTS employee_key_result ("
+            "EmployeeID INTEGER NOT NULL,"
             "KeyResultID INTEGER NOT NULL,"
-            "AssignedDate TEXT NOT NULL,"
+            "AssignedDate TEXT NOT NULL,"
             "Weight REAL,"
             "Status TEXT,"
+            "PRIMARY KEY (EmployeeID, KeyResultID),"
             "FOREIGN KEY (EmployeeID) REFERENCES employee(EmployeeID),"
-            "FOREIGN KEY (KeyResultID) REFERENCES key_result(KeyResultID)"
+            "FOREIGN KEY (KeyResultID) REFERENCES key_results(KeyResultID)"
             ");";
 
-            sqlite3_exec(db, createEmployeeKeyResultsTable, nullptr, nullptr, nullptr);
+            char* errMsg = nullptr;
+
+            int rc = sqlite3_exec(db, createEmployeeKeyResultsTable, nullptr, nullptr, &errMsg);
+
+            if (rc != SQLITE_OK) {
+                cout << "SQL error: " << errMsg << endl;
+                sqlite3_free(errMsg);
+            } 
 
 
 
     cout<<"Welcome to OK Results."<<endl;
     string input = "";
+
+//Exit program
 
     while (!(input == "q" || input == "quit")){
         input = getInput();
@@ -143,45 +181,76 @@ if (rc) {
             cout<<""<<endl;
         }
 
-        else if(input == "create" || input == "new"){
-            cout<<"What type of object would you like to create?"<<endl;
-            cout<<"OKR Object types are: team, employee, key result, employee key result, and objective"<<endl;
-            input = getInput();
-            string sql = "";
-            if (input == "employee"){
-                cout<<"For all fields, don't include any spaces in your input."<<endl; //it causes a silly bug i dont know how to fix we can ignore for now
-
-                string firstName = "";
-                string lastName = "";
+//Add to table
+        else if(input == "create" || input == "new"){ 
+            cout<<"What type of object would you like to create?"<<endl; 
+            cout<<"OKR Object types are: team, employee, key result, employee key result, and objective"<<endl; 
+            input = getInput(); 
+            string sql; 
+            
+            if (input == "employee"){ 
+                cout<<"For all fields, don't include any spaces in your input."<<endl;
+                string firstName = ""; 
+                string lastName = ""; 
                 string email = ""; 
-                string role = "";
-                int teamID = -1;
+                string role = ""; 
+                int teamID = -1; 
+                cout << "First Name: "; 
+                cin >> firstName; cout << "Last Name: "; 
+                cin >> lastName; cout << "Email: "; 
+                cin >> email; cout << "Role: "; 
+                cin >> role; cout << "Team ID: "; 
+                cin >> teamID; 
+                sql = "INSERT INTO employee " "(FirstName, LastName, Email, Role, TeamID) VALUES (' " + 
+                firstName + "', '" + lastName + "', '" + email + "', '" + role + "', " + to_string(teamID) + ");"; 
+                
+                
+                
 
-                cout << "First Name: ";
-                cin >> firstName;
+            
+            }else if (input == "team"){ 
+                string teamName = ""; 
+                cout << "Enter Team Name: "; 
+                getline(cin, teamName); 
+                sql = "INSERT INTO team (TeamName) VALUES ('" + teamName + "');";
 
-                cout << "Last Name: ";
-                cin >> lastName;
+            }else if (input == "objective" || input == "objectives") {
 
-                cout << "Email: ";
-                cin >> email;
+            string title;
+            cout << "Title: ";
+            cin >> title;
 
-                cout << "Role: ";
-                cin >> role;
+            string desc;
+            cout << "Description: ";
+            cin >> desc;
 
-                cout << "Team ID: ";
-                cin >> teamID;
+            string startDate;
+            cout << "Start Date: ";
+            cin >> startDate;
 
-                string addEmployee =
-                    "INSERT INTO employee "
-                    "(FirstName, LastName, Email, Role, TeamID) VALUES ('" +
-                firstName + "', '" + lastName + "', '" + email + "', '" +
-                role + "', " + to_string(teamID) + ");";
+            string endDate;
+            cout << "End Date: ";
+            cin >> endDate;
 
-                sqlite3_exec(db, addEmployee.c_str(), nullptr, nullptr, nullptr);
+            string status;
+            cout << "Status: ";
+            cin >> status;
 
-                cout << firstName + " " + lastName +" created." << endl;
-            }else if (input == "team"){
+            int teamID;
+            cout << "Team ID: ";
+            cin >> teamID;
+
+            int ownerID;
+            cout << "Owner Employee ID (or 0 if none): ";
+            cin >> ownerID;
+
+            sql = "INSERT INTO objectives "
+                "(Title, Description, StartDate, EndDate, Status, TeamID, OwnerEmployeeID) "
+                "VALUES ('" + title + "', '" + desc + "', '" + startDate + "', '" +
+                endDate + "', '" + status + "', " +
+                to_string(teamID) + ", " + (ownerID == 0 ? "NULL" : to_string(ownerID)) + ");";
+
+}else if (input == "team"){
         
             string teamName = "";
             cout << "Enter Team Name: ";
@@ -212,7 +281,8 @@ if (rc) {
                 cout<<"what is the current status of the objective?"<<endl;
                 cin>>status;
 
-                sql = "INSERT INTO objectives (Title, Description, StartDate, EndDate, Status) VALUES ('" + title + ", "+ desc + ", "+ startDate +", " + endDate + "');";
+                sql = "INSERT INTO objectives (Title, Description, StartDate, EndDate, Status) VALUES ('" + title + "', '"+ desc + "', '"+ startDate +"', '" 
+                + endDate + "', '"+ status + "');";
 
 
             }else if (input == "key_result"){
@@ -225,12 +295,13 @@ if (rc) {
 
             char* errMsg = nullptr;
 
-            sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg); //check if sqlite has an error, and prints if it does
+            sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
 
             if (errMsg) {
                 cout << "SQL error: " << errMsg << endl;
                 sqlite3_free(errMsg);
             }
+            sql.clear();
         }
         else if (input == "delete" || input == "kill") {
 
@@ -277,6 +348,9 @@ if (rc) {
         }else if (input == "join" || input == "combine") {
             //add this
 
+        }else if (input == "quit" || input == "q"){
+            cout<<"quitting..."<<endl;
+            break;
         }else{
             cout<<"Unidentified input. type help for a list of commands."<<endl;
         }
@@ -285,7 +359,7 @@ if (rc) {
 
     }
 
-
+sqlite3_close(db);
 
 }
 
