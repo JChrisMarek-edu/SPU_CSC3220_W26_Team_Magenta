@@ -34,11 +34,11 @@ int getIntInput(){ //maybe make a version of this for floats?
     while (output == ""){
     getline(cin, input);
         for (int i = 0; i < input.size(); i++){
-            if (isdigit(input.at(i))){ //only get numbers from input
+            if (isdigit(input.at(i))){ // get all numbers from input in order
                 output += input.at(i);
             }
         }
-        if (output == ""){
+        if (output == ""){ //if there were no numbers in the input
             cout<<"input could not be understood. please enter a positive integer. ";
             
         }
@@ -48,7 +48,7 @@ int getIntInput(){ //maybe make a version of this for floats?
 
 
 
-static int callback(void* unused, int argc, char** argv, char** azColName) { //Chatgpt made this method
+static int callback(void* unused, int argc, char** argv, char** azColName) { //Chatgpt made this method, it is used once i think
     for (int i = 0; i < argc; i++) {
         cout << azColName[i] << ": "
              << (argv[i] ? argv[i] : "NULL") << endl;
@@ -62,11 +62,11 @@ int main(){
 
 sqlite3* db;
 char* errMsg = nullptr;
-int rc = -1;
-int trolling = 0;
+int rc = -1; 
+int trolling = 0; //this is used to stop an accidental infinite loop later on
 
-if (sqlite3_open("okr.db", &db) != SQLITE_OK) {
-    std::cerr << "Cannot open database\n";
+if (sqlite3_open("okr.db", &db) != SQLITE_OK) { //error if cnanot open database file
+    cerr << "Cannot open database\n";
     return 1;
 }
 
@@ -106,7 +106,6 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
 
 
             errMsg = nullptr;
-
             rc = sqlite3_exec(db, createEmployeeTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
@@ -130,7 +129,6 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             ");";
 
             errMsg = nullptr;
-
             rc = sqlite3_exec(db, createObjectivesTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
@@ -157,7 +155,6 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             ");";
 
             errMsg = nullptr;
-
             rc = sqlite3_exec(db, createKeyResultsTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
@@ -165,7 +162,7 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
                 sqlite3_free(errMsg);
             } 
 
-
+            //create employee key results table
             const char* createEmployeeKeyResultsTable =
             "CREATE TABLE IF NOT EXISTS employee_key_result ("
             "EmployeeID INTEGER NOT NULL,"
@@ -179,7 +176,6 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             ");";
 
             errMsg = nullptr;
-
             rc = sqlite3_exec(db, createEmployeeKeyResultsTable, nullptr, nullptr, &errMsg);
 
             if (rc != SQLITE_OK) {
@@ -188,17 +184,15 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             } 
 
 
-
+//input loop
     cout<<"Welcome to OK Results."<<endl;
     string input = "";
 
-//Exit program
-
+    //Exit program
     while (!(input == "q" || input == "quit")){
         input = getInput();
-        //debug code
-        //cout<<input<<endl;
-
+        
+        //help command
         if (input == "help" || input == "help"){
             //help command
             cout<<"Commands:"<<endl;
@@ -210,17 +204,21 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             cout<<"Update: "<<endl;
             cout<<""<<endl;
             cout<<""<<endl;
-        }
+            
+        }else if (input == "quit" || input == "q"){
+            cout<<"quitting..."<<endl;
+            break;
+        
 
-//Add to table
-        else if(input == "create" || input == "new"){ 
+            //Add data to table
+        }else if(input == "create" || input == "new" || input == "add"){ 
             cout<<"What type of object would you like to create?"<<endl; 
             cout<<"OKR Table types are: team, employee, key result, employee key result, and objective"<<endl; 
             input = getInput(); 
             string sql; 
             
 
-            //note: all of these don't execute the code immediately, they store the code in the sql variable and execute at the end.
+            //note: all of these don't execute the sql code immediately, they store the code in the sql variable and execute at the end.
             if (input == "employee"){ 
                 
                 string firstName; 
@@ -278,7 +276,7 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
                 "(Title, Description, StartDate, EndDate, Status, TeamID, OwnerEmployeeID) "
                 "VALUES ('" + title + "', '" + desc + "', '" + startDate + "', '" +
                 endDate + "', '" + status + "', " +
-                to_string(teamID) + ", " + (ownerID == 0 ? "NULL" : to_string(ownerID)) + ");";
+                to_string(teamID) + ", " + to_string(ownerID) + ");";
         
 
             }else if (input == "key_result" || input == "key_results" || input == "kr"){
@@ -301,10 +299,10 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             cout << "Title: "<<endl; title = getInput();
             cout << "Metric Name: "<<endl; metricName = getInput();
         cout << "---------------------------------------------------"<<endl;
-            cout << "Completion Starting Value: "<<endl; startVal = getIntInput();
+            cout << "Completion Starting Value (usually 0): "<<endl; startVal = getIntInput();
             cout << "Completion Current Value: "<<endl; currVal = getIntInput();
+            cout << "Completion Max Value (usually 100): "<<endl; maxVal = getIntInput();
             cout << "Completion Target Value: "<<endl; targetVal = getIntInput();
-            cout << "Completion Max Value: "<<endl; maxVal = getIntInput();
         cout << "---------------------------------------------------"<<endl;
             cout << "Unit: "<<endl; unit = getInput();
             cout << "Start Date: "<<endl; startDate = getInput();
@@ -339,8 +337,8 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
                 + status + "');";
 
             }else{
-                cout<<"inproper object type."<<endl;
-                sql = "";
+                cout<<"improper object type."<<endl;
+                sql = ""; //i haven't tested if this line causes issues or not, but it should be fine.
             }
 
 
@@ -366,37 +364,36 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             string sql;
              input = getInput();
              int id = -1;
-//add multiple terms the user can type
-            if (input == "team") {
+
+            if (input == "team" || input == "teams") {
                 cout << "Enter Team ID: ";
                 id = getIntInput();
                 sql = "DELETE FROM team WHERE TeamID = " + to_string(id) + ";";
-                cout << "Team deleted." << endl;
+                
 
-            }else if  (input == "employee"){
+            }else if  (input == "employee" || input == "employees"){
                 cout << "Enter Employee ID: ";
                 id = getIntInput();
                 sql = "DELETE FROM employee WHERE EmployeeID = " + to_string(id) + ";";
-                cout << "Employee deleted." << endl;
+                
 
-            }else if  (input == "key_result"){
+            }else if  (input == "key_result" || input == "key_results" || input == "kr"){
                 cout << "Enter key result ID: ";
                 id = getIntInput();
                 sql = "DELETE FROM key_results WHERE KeyResultID = " + to_string(id) + ";";
-                cout << "Key Result deleted." << endl;
+                
 
-            }else if  (input == "objective"){
+            }else if  (input == "objective" || input == "objectives"){
                 cout << "Enter Objective ID: ";
                 id = getIntInput();
                 sql = "DELETE FROM objectives WHERE ObjectiveID = " + to_string(id) + ";";
-                cout << "Objective deleted." << endl;
+                
 
-            else if  (input == "employee_key_result"){//unfinished
-                cout<<"Employee key results can't currently be deleted. We will work on it though!"
+            }else if  (input == "employee_key_result" || input == "employee_key_results"){//unfinished, can't figure out
+                cout<<"Employee key results can't currently be deleted. We will work on it though!"<<endl;
             }
             
             errMsg = nullptr;
-
             sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
 
             if (errMsg) {
@@ -408,7 +405,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             sql.clear();
             
 
-        }else if (input == "list" || input == "view") { //view data
+
+
+        }else if (input == "list" || input == "view") { //view data UNFINISHED
 
             cout << "What do you want to list? (team, employee, objective)" << endl;
             input = getInput();
@@ -427,11 +426,8 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             //add this
         
         }else if (input == "join" || input == "combine") {
-            //add this
+            //add this (maybe)
 
-        }else if (input == "quit" || input == "q"){
-            cout<<"quitting..."<<endl;
-            break;
         }else{
             cout<<"Unidentified input. type help for a list of commands."<<endl;
             trolling++;
