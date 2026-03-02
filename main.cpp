@@ -416,6 +416,14 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
                 cout<<"Viewing teams"<<endl;
                 const char* sql = "SELECT * FROM team;";
                 sqlite3_exec(db, sql, callback, nullptr, nullptr);
+            }else if (input == "employee") {
+                cout<<"Viewing employees"<<endl;
+                const char* sql = "SELECT * FROM employee;";
+                sqlite3_exec(db, sql, callback, nullptr, nullptr);
+            }else if (input == "objective") {
+                cout<<"Viewing objective"<<endl;
+                const char* sql = "SELECT * FROM objective;";
+                sqlite3_exec(db, sql, callback, nullptr, nullptr);
             }
 
 
