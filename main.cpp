@@ -65,7 +65,7 @@ char* errMsg = nullptr;
 int rc = -1; 
 int trolling = 0; //this is used to stop an accidental infinite loop later on
 
-if (sqlite3_open("okr.db", &db) != SQLITE_OK) { //error if cnanot open database file
+if (sqlite3_open("okr.db", &db) != SQLITE_OK) { //error if cannot open database file
     cerr << "Cannot open database\n";
     return 1;
 }
@@ -185,7 +185,7 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
 
 
 //input loop
-    cout<<"Welcome to OK Results."<<endl;
+    cout<<"Welcome to OK Results. \n How can we assist you?"<<endl;
     string input = "";
 
     //Exit program
@@ -431,7 +431,56 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
 
 
         }else if (input == "update" || input == "edit") {
-            //add this
+            cout << "update which object?" << endl << "choose from team, employee, objective, or key result" << endl;
+            string sql;
+            input = getInput();
+            int id = -1;
+            string val = "";
+            if (input == "team") {
+                cout << "Enter Team ID: ";
+                id = getIntInput();
+                cout << "Enter field to update: ";
+                input = getInput();
+                cout << "Enter new value for the selected field: ";
+                val = getInput();
+                sql = "UPDATE team SET " + input + " = " + val + " WHERE TeamID = " + to_string(id) + ";";
+                
+            }else if (input == "employee") {
+                cout << "Enter Employee ID: ";
+                id = getIntInput();
+                cout << "Enter field to update: ";
+                input = getInput();
+                cout << "Enter new value for the selected field: ";
+                val = getInput();
+                sql = "UPDATE employee SET " + input + " = " + val + " WHERE EmployeeID = " + to_string(id) + ";";
+            }else if (input == "objective") {
+                cout << "Enter Objective ID: ";
+                id = getIntInput();
+                cout << "Enter field to update: ";
+                input = getInput();
+                cout << "Enter new value for the selected field: ";
+                val = getInput();
+                sql = "UPDATE objective SET " + input + " = " + val + " WHERE ObjectiveID = " + to_string(id) + ";";
+            }else if (input == "key_result") {
+                cout << "Enter Key Result ID: ";
+                id = getIntInput();
+                cout << "Enter field to update: ";
+                input = getInput();
+                cout << "Enter new value for the selected field: ";
+                val = getInput();
+                sql = "UPDATE key_result SET " + input + " = " + val + " WHERE KeyResultID = " + to_string(id) + ";";
+            }
+            errMsg = nullptr;
+            sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+
+            if (errMsg) {
+                cout << "SQL error: " << errMsg << endl;
+                sqlite3_free(errMsg);
+            }else{
+                cout<<"Successfully updated entry of type: " + input <<endl;
+            }
+            sql.clear();
+
         
         }else if (input == "join" || input == "combine") {
             //add this (maybe)
