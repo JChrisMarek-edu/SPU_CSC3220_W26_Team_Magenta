@@ -200,10 +200,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             cout<<"Create: Add a new team, employee, Objective, Key Result, or employee key result."<<endl;
             cout<<"Delete: remove some or all data from a database table of your choice"<<endl;
             cout<<"List: Read all data from a database table of your choice"<<endl;
+            cout<<"Update: Change a value in a table"<<endl;
             cout<<"Help: Opens help menu"<<endl;
-            cout<<"Update: "<<endl;
-            cout<<""<<endl;
-            cout<<""<<endl;
+            cout<<endl;
             
         }else if (input == "quit" || input == "q"){
             cout<<"quitting..."<<endl;
@@ -213,7 +212,7 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             //Add data to table
         }else if(input == "create" || input == "new" || input == "add"){ 
             cout<<"What type of object would you like to create?"<<endl; 
-            cout<<"OKR Table types are: team, employee, key result, employee key result, and objective"<<endl; 
+            cout<<"OKR Table types are: team, employee, key result, employee key result, and objectives"<<endl; 
             input = getInput(); 
             string sql; 
             
@@ -389,8 +388,9 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
                 sql = "DELETE FROM objectives WHERE ObjectiveID = " + to_string(id) + ";";
                 
 
-            }else if  (input == "employee_key_result" || input == "employee_key_results"){//unfinished, can't figure out
-                cout<<"Employee key results can't currently be deleted. We will work on it though!"<<endl;
+            }else {
+                cout<<"Improper input."<<endl;
+            
             }
             
             errMsg = nullptr;
@@ -407,7 +407,7 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
 
 
 
-        }else if (input == "list" || input == "view") { //view data UNFINISHED
+        }else if (input == "list" || input == "view" || input == "read") { //view data 
 
             cout << "What do you want to list? (team, employee, objective)" << endl;
             input = getInput();
@@ -415,60 +415,81 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             if (input == "team") {
                 cout<<"Viewing teams"<<endl;
                 const char* sql = "SELECT * FROM team;";
+                cout<<"---------------------"<<endl;
                 sqlite3_exec(db, sql, callback, nullptr, nullptr);
             }else if (input == "employee") {
                 cout<<"Viewing employees"<<endl;
                 const char* sql = "SELECT * FROM employee;";
+                cout<<"---------------------"<<endl;
                 sqlite3_exec(db, sql, callback, nullptr, nullptr);
             }else if (input == "objective") {
                 cout<<"Viewing objective"<<endl;
-                const char* sql = "SELECT * FROM objective;";
+                const char* sql = "SELECT * FROM objectives;";
+                cout<<"---------------------"<<endl;
                 sqlite3_exec(db, sql, callback, nullptr, nullptr);
             }
 
-
+            
 
 
 
         }else if (input == "update" || input == "edit") {
             cout << "update which object?" << endl << "choose from team, employee, objective, or key result" << endl;
             string sql;
+            
             input = getInput();
             int id = -1;
             string val = "";
+            cout<<"For all following values, capitalization matters!"<<endl;
             if (input == "team") {
                 cout << "Enter Team ID: ";
                 id = getIntInput();
+                cout << "Modifiable fields for Team are: TeamName" <<endl;
                 cout << "Enter field to update: ";
-                input = getInput();
+
+                string field = "";
+                getline(cin, field);
                 cout << "Enter new value for the selected field: ";
-                val = getInput();
-                sql = "UPDATE team SET " + input + " = " + val + " WHERE TeamID = " + to_string(id) + ";";
+                string val ="";
+                getline(cin, val);
+                sql = "UPDATE team SET " + field + " = '" + val + "' WHERE TeamID = " + to_string(id) + ";";
                 
             }else if (input == "employee") {
                 cout << "Enter Employee ID: ";
                 id = getIntInput();
+                cout << "Modifiable fields for Employee are: FirstName, LastName, EMAIL, Role, HireDate, TeamID" <<endl;
                 cout << "Enter field to update: ";
-                input = getInput();
+                string field = "";
+                getline(cin, field);
                 cout << "Enter new value for the selected field: ";
-                val = getInput();
-                sql = "UPDATE employee SET " + input + " = " + val + " WHERE EmployeeID = " + to_string(id) + ";";
-            }else if (input == "objective") {
+                string val ="";
+                getline(cin, val);
+                sql = "UPDATE employee SET " + field + " = '" + val + "' WHERE EmployeeID = " + to_string(id) + ";";
+
+            }else if (input == "objective" || input == "objectives") {
                 cout << "Enter Objective ID: ";
                 id = getIntInput();
+                cout << "Modifiable fields for Objective are: Title, Description, StartDate, EndDate, Status, TeamID, OwnerEmployeeID" <<endl;
                 cout << "Enter field to update: ";
-                input = getInput();
+                string field = "";
+                getline(cin, field);
                 cout << "Enter new value for the selected field: ";
-                val = getInput();
-                sql = "UPDATE objective SET " + input + " = " + val + " WHERE ObjectiveID = " + to_string(id) + ";";
+                string val ="";
+                getline(cin, val);
+                sql = "UPDATE objectives SET " + field + " = '" + val + "' WHERE ObjectiveID = " + to_string(id) + ";";
+
             }else if (input == "key_result") {
                 cout << "Enter Key Result ID: ";
                 id = getIntInput();
+                cout << "Modifiable fields for Key Results are: ObjectiveID, Title, MetricName, StartValue, CurrentValue, TargetValue, MaxValue," <<endl;
+                cout<<"Unit, StartDate, DueDate, Status"<<endl;
                 cout << "Enter field to update: ";
-                input = getInput();
+                string field = "";
+                getline(cin, field);
                 cout << "Enter new value for the selected field: ";
-                val = getInput();
-                sql = "UPDATE key_result SET " + input + " = " + val + " WHERE KeyResultID = " + to_string(id) + ";";
+                string val ="";
+                getline(cin, val);
+                sql = "UPDATE key_results SET " + field + " = '" + val + "' WHERE KeyResultID = " + to_string(id) + ";";
             }
             errMsg = nullptr;
             sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
@@ -482,8 +503,8 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             sql.clear();
 
         
-        }else if (input == "join" || input == "combine") {
-            //add this (maybe)
+        
+            //maybe add join function? it's probably good without it
 
         }else{
             cout<<"Unidentified input. type help for a list of commands."<<endl;
@@ -494,7 +515,7 @@ sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
             }
         }
 
-        
+        cout<<endl;
 
     }
 
@@ -503,12 +524,6 @@ sqlite3_close(db);
 }
 
 
-string printDate(int myDate){
-    
-    return "printDate is currently not programmed";
-
-
-}
 
 
 
